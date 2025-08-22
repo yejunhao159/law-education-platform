@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧法学讲台 - 整合工作流程</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+        
+        /* 顶部导航 */
+        .top-nav {
+            background: #1a1a2e;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-center {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .nav-item {
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .nav-item.active {
+            background: #3498db;
+        }
+        
+        .nav-item:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* 主容器 */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+        
+        /* 左侧工作流程面板 */
+        .workflow-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: fit-content;
+            position: sticky;
+            top: 30px;
+        }
+        
+        .workflow-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+        
+        .workflow-step {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .workflow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 50px;
+            width: 2px;
+            height: 30px;
+            background: #e0e0e0;
+        }
+        
+        .workflow-step.completed::after {
+            background: #27ae60;
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .workflow-step.completed .step-icon {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .workflow-step.active .step-icon {
+            background: #3498db;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+        }
+        
+        .step-action {
+            background: none;
+            border: 1px solid #3498db;
+            color: #3498db;
+            padding: 4px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .step-action:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .step-content {
+            margin-left: 55px;
+            color: #7f8c8d;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .step-details {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+            margin-top: 8px;
+        }
+        
+        /* 右侧主工作区 */
+        .main-workspace {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .workspace-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .workspace-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .workspace-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .workspace-content {
+            padding: 40px;
+        }
+        
+        /* 文件上传区 */
+        .upload-zone {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 50px;
+            text-align: center;
+            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover {
+            border-color: #2980b9;
+            background-color: rgba(52, 152, 219, 0.02);
+        }
+        
+        .upload-icon {
+            font-size: 60px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        /* 模板选择区 */
+        .template-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .template-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            position: relative;
+        }
+        
+        .template-card:hover {
+            border-color: #3498db;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .template-card.recommended {
+            border-color: #e67e22;
+            background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+        }
+        
+        .template-card.recommended::before {
+            content: '⭐ 推荐';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #e67e22;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .template-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .template-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .template-desc {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .template-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #95a5a6;
+        }
+        
+        /* AI生成状态 */
+        .ai-generation-status {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .ai-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .ai-status-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            background: white;
+            height: 100%;
+            width: 65%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .ai-tasks {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .ai-task {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .task-status {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* 结果预览区 */
+        .results-preview {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .preview-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .preview-btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .primary-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+        }
+        
+        .secondary-btn {
+            background: white;
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+        
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        
+        .preview-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .preview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .preview-card-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .preview-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .preview-card-body {
+            padding: 20px;
+        }
+        
+        .preview-content {
+            color: #7f8c8d;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .quality-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        
+        .quality-score {
+            background: #e8f5e9;
+            color: #27ae60;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+        
+        /* 模块配置面板 */
+        .modules-config {
+            display: none;
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .config-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+        
+        .module-toggles {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .module-toggle {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .module-toggle:hover {
+            border-color: #3498db;
+        }
+        
+        .module-toggle.active {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+        
+        .toggle-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .module-toggle.active .toggle-checkbox {
+            border-color: #3498db;
+            background: #3498db;
+            color: white;
+        }
+        
+        .toggle-info {
+            flex: 1;
+        }
+        
+        .toggle-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+        
+        .toggle-desc {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="top-nav">
+        <div class="logo">
+            ⚖️ 智慧法学讲台
+        </div>
+        <div class="nav-center">
+            <div class="nav-item active">📚 教案生成</div>
+            <div class="nav-item">🎯 课堂互动</div>
+            <div class="nav-item">📊 数据分析</div>
+            <div class="nav-item">⚙️ 模板管理</div>
+        </div>
+        <div>👤 张老师</div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 左侧工作流程 -->
+        <div class="workflow-panel">
+            <h3 class="workflow-title">📋 教案生成流程</h3>
+            
+            <div class="workflow-step completed">
+                <div class="step-header">
+                    <div class="step-icon">✓</div>
+                    <div class="step-title">上传判决书</div>
+                    <button class="step-action">重新选择</button>
+                </div>
+                <div class="step-content">
+                    已上传：张某盗窃案判决书.pdf
+                    <div class="step-details">
+                        <strong>识别结果：</strong><br>
+                        案件类型：刑事案件<br>
+                        文档质量：清晰 (置信度: 98%)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="workflow-step completed">
+                <div class="step-header">
+                    <div class="step-icon">✓</div>
+                    <div class="step-title">选择教学模板</div>
+                    <button class="step-action">更换模板</button>
+                </div>
+                <div class="step-content">
+                    已选择：刑事案件标准模板
+                    <div class="step-details">
+                        <strong>模板特点：</strong><br>
+                        • 六大教学模块<br>
+                        • 适用于本科教学<br>
+                        • 支持互动式教学
+                    </div>
+                </div>
+            </div>
+            
+            <div class="workflow-step active">
+                <div class="step-header">
+                    <div class="step-icon">⚡</div>
+                    <div class="step-title">AI内容生成</div>
+                    <button class="step-action">查看详情</button>
+                </div>
+                <div class="step-content">
+                    正在生成教学内容...
+                    <div class="step-details">
+                        <strong>生成进度：</strong><br>
+                        ✅ 案情提取 (100%)<br>
+                        ✅ 法律关系 (100%)<br>
+                        ⏳ 教学要点 (65%)<br>
+                        ⏸️ 互动设计 (待处理)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="workflow-step">
+                <div class="step-header">
+                    <div class="step-icon">🎯</div>
+                    <div class="step-title">质量审核</div>
+                </div>
+                <div class="step-content">
+                    等待AI生成完成
+                </div>
+            </div>
+            
+            <div class="workflow-step">
+                <div class="step-header">
+                    <div class="step-icon">📋</div>
+                    <div class="step-title">教案定制</div>
+                </div>
+                <div class="step-content">
+                    根据需要调整模块配置
+                </div>
+            </div>
+            
+            <div class="workflow-step">
+                <div class="step-header">
+                    <div class="step-icon">🎉</div>
+                    <div class="step-title">生成完成</div>
+                </div>
+                <div class="step-content">
+                    下载教学资源包
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧主工作区 -->
+        <div class="main-workspace">
+            <div class="workspace-header">
+                <h1 class="workspace-title">从判决书到教案</h1>
+                <p class="workspace-subtitle">10分钟完成传统2小时的备课工作</p>
+            </div>
+            
+            <div class="workspace-content">
+                <!-- 文件上传区（初始状态，已隐藏） -->
+                <div class="upload-zone" style="display: none;">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">上传判决书文档</div>
+                    <div class="upload-hint">支持 PDF、Word、图片格式，最大50MB</div>
+                    <button class="upload-btn">选择文件</button>
+                </div>
+
+                <!-- 模板选择区（初始状态，已隐藏） -->
+                <div class="template-selection" style="display: none;">
+                    <div class="template-card recommended">
+                        <div class="template-icon">⚖️</div>
+                        <div class="template-name">刑事案件模板</div>
+                        <div class="template-desc">适用于刑法课程，包含完整的六大教学模块</div>
+                        <div class="template-stats">
+                            <span>使用156次</span>
+                            <span>⭐4.8分</span>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card">
+                        <div class="template-icon">📋</div>
+                        <div class="template-name">快速分析模板</div>
+                        <div class="template-desc">30分钟快课，适合案例分析课程</div>
+                        <div class="template-stats">
+                            <span>使用89次</span>
+                            <span>⭐4.6分</span>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card">
+                        <div class="template-icon">🎭</div>
+                        <div class="template-name">模拟法庭模板</div>
+                        <div class="template-desc">包含角色扮演和法庭模拟环节</div>
+                        <div class="template-stats">
+                            <span>使用45次</span>
+                            <span>⭐4.7分</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI生成状态（当前显示） -->
+                <div class="ai-generation-status" style="display: block;">
+                    <div class="ai-status-header">
+                        <h2 class="ai-status-title">🤖 AI正在生成教学内容</h2>
+                        <div style="font-size: 14px; opacity: 0.9;">预计剩余 3 分钟</div>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    
+                    <div class="ai-tasks">
+                        <div class="ai-task">
+                            <div class="task-title">
+                                ✅ 案情分析
+                            </div>
+                            <div class="task-status">
+                                已提取5个关键事实<br>
+                                置信度: 98%
+                            </div>
+                        </div>
+                        
+                        <div class="ai-task">
+                            <div class="task-title">
+                                ✅ 法律适用
+                            </div>
+                            <div class="task-status">
+                                已识别相关法条<br>
+                                匹配度: 95%
+                            </div>
+                        </div>
+                        
+                        <div class="ai-task">
+                            <div class="task-title">
+                                ⚡ PPT生成
+                            </div>
+                            <div class="task-status">
+                                正在生成第3页...<br>
+                                进度: 65%
+                            </div>
+                        </div>
+                        
+                        <div class="ai-task">
+                            <div class="task-title">
+                                ⏳ 音频合成
+                            </div>
+                            <div class="task-status">
+                                等待PPT完成<br>
+                                队列位置: 1
+                            </div>
+                        </div>
+                        
+                        <div class="ai-task">
+                            <div class="task-title">
+                                ⏳ 教学脚本
+                            </div>
+                            <div class="task-status">
+                                等待前序任务<br>
+                                预计2分钟
+                            </div>
+                        </div>
+                        
+                        <div class="ai-task">
+                            <div class="task-title">
+                                ⏸️ 质量检查
+                            </div>
+                            <div class="task-status">
+                                待处理<br>
+                                自动质检中
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 结果预览区（待显示） -->
+                <div class="results-preview">
+                    <div class="preview-header">
+                        <h2 class="preview-title">📊 生成结果预览</h2>
+                        <div class="preview-actions">
+                            <button class="preview-btn secondary-btn">🔄 重新生成</button>
+                            <button class="preview-btn primary-btn">✅ 确认使用</button>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-grid">
+                        <div class="preview-card">
+                            <div class="preview-card-header">
+                                <div class="preview-card-title">
+                                    📋 PPT课件
+                                </div>
+                            </div>
+                            <div class="preview-card-body">
+                                <div class="preview-content">
+                                    包含15页完整课件，涵盖案情分析、法律适用、争议焦点等核心内容
+                                </div>
+                                <div class="quality-indicator">
+                                    <span>结构完整度</span>
+                                    <span class="quality-score">92%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-card">
+                            <div class="preview-card-header">
+                                <div class="preview-card-title">
+                                    🎧 多角色音频
+                                </div>
+                            </div>
+                            <div class="preview-card-body">
+                                <div class="preview-content">
+                                    生成18分钟对话音频，包含法官、律师、当事人等多个角色
+                                </div>
+                                <div class="quality-indicator">
+                                    <span>音频质量</span>
+                                    <span class="quality-score">88%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-card">
+                            <div class="preview-card-header">
+                                <div class="preview-card-title">
+                                    📝 教学脚本
+                                </div>
+                            </div>
+                            <div class="preview-card-body">
+                                <div class="preview-content">
+                                    详细教学流程，包含互动设计、提问要点、时间分配等
+                                </div>
+                                <div class="quality-indicator">
+                                    <span>逻辑完整度</span>
+                                    <span class="quality-score">95%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模块配置面板（待显示） -->
+                <div class="modules-config">
+                    <h3 class="config-title">🎯 教学模块定制</h3>
+                    
+                    <div class="module-toggles">
+                        <div class="module-toggle active">
+                            <div class="toggle-checkbox">✓</div>
+                            <div class="toggle-info">
+                                <div class="toggle-title">案情导入</div>
+                                <div class="toggle-desc">动画演示 • 10分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="module-toggle active">
+                            <div class="toggle-checkbox">✓</div>
+                            <div class="toggle-info">
+                                <div class="toggle-title">证据对质</div>
+                                <div class="toggle-desc">对比分析 • 15分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="module-toggle">
+                            <div class="toggle-checkbox"></div>
+                            <div class="toggle-info">
+                                <div class="toggle-title">争议辩论</div>
+                                <div class="toggle-desc">分组讨论 • 20分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="module-toggle active">
+                            <div class="toggle-checkbox">✓</div>
+                            <div class="toggle-info">
+                                <div class="toggle-title">法官说理</div>
+                                <div class="toggle-desc">逐层分析 • 15分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="module-toggle active">
+                            <div class="toggle-checkbox">✓</div>
+                            <div class="toggle-info">
+                                <div class="toggle-title">苏格拉底提问</div>
+                                <div class="toggle-desc">启发式 • 20分钟</div>
+                            </div>
+                        </div>
+                        
+                        <div class="module-toggle">
+                            <div class="toggle-checkbox"></div>
+                            <div class="toggle-info">
+                                <div class="toggle-title">总结升华</div>
+                                <div class="toggle-desc">知识拓展 • 10分钟</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="preview-btn primary-btn">📥 生成最终教案</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
